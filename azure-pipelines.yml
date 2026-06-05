@@ -11,11 +11,13 @@ pool:
 
 steps:
 - script: echo Hello, world!
-- task: DynatraceIntegrationCreateEvents@0
+- task: RegisterDynatraceTestrun@3
   inputs:
-    DynatraceService: 'dynatrace_connection'
-    apimethod: 'events'
-    jsonEventFile: '{   "eventDetails": {     "eventType": "Deployment",     "title": "Release $(Release.ReleaseName)",     "description": "Deployment to production",     "source": "Azure DevOps",     "customProperties": {       "BuildId": "$(Build.BuildId)"     },     "entitySelector": "Target Dynatrace entity or selector expression"   } }'
+    dtserver: 'dynatrace_connection2'
+    profile: '{   "eventDetails": {     "eventType": "Deployment",     "title": "Release $(Release.ReleaseName)",     "description": "Deployment to production",     "source": "Azure DevOps",     "customProperties": {       "BuildId": "$(Build.BuildId)"     },     "entitySelector": "Target Dynatrace entity or selector expression"   } }'
+    category: 'unit'
+    version: 'env:BUILD_BUILDID'
+    activateDotNetAgent: true
 
 - script: |
     echo Add other tasks to build, test, and deploy your project.
