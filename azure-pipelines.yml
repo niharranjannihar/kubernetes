@@ -11,6 +11,11 @@ pool:
 
 steps:
 - script: echo Hello, world!
+- task: DynatraceIntegrationCreateEvents@0
+  inputs:
+    DynatraceService: 'dynatrace_connection'
+    apimethod: 'events'
+    jsonEventFile: '{   "eventDetails": {     "eventType": "Deployment",     "title": "Release $(Release.ReleaseName)",     "description": "Deployment to production",     "source": "Azure DevOps",     "customProperties": {       "BuildId": "$(Build.BuildId)"     },     "entitySelector": "Target Dynatrace entity or selector expression"   } }'
   displayName: 'Run a one-line script'
 
 - script: |
