@@ -1,21 +1,10 @@
-trigger:
-- master
-
-pool:
-  vmImage: 'windows-latest'
-
-variables:
-  system.debug: true
-
-steps:
-
 - powershell: |
     @'
     {
+      "deploymentName": "Azure DevOps Deployment",
       "eventType": "CUSTOM_DEPLOYMENT",
-      "title": "Deployment $(Build.BuildNumber)",
       "source": "Azure DevOps",
-      "timeoutMinutes": 15,
+      "title": "Deployment $(Build.BuildNumber)",
       "attachRules": {
         "entityIds": [
           "SERVICE-B295005FEE0D669E"
@@ -23,22 +12,8 @@ steps:
       },
       "properties": {
         "dt.event.description": "Deployment triggered from Azure DevOps",
-        "BuildId": "$(Build.BuildId)",
-        "PipelineName": "$(Build.DefinitionName)",
-        "BuildNumber": "$(Build.BuildNumber)"
+        "BuildId": "$(Build.BuildId)"
       }
     }
     '@ | Out-File "$(Build.SourcesDirectory)\dynatrace-event.json" -Encoding utf8
   displayName: 'Create Dynatrace Event JSON'
-
-- powershell: |
-    Write-Host "===== Event JSON ====="
-    Get-Content "$(Build.SourcesDirectory)\dynatrace-event.json"
-  displayName: 'Display Event JSON'
-
-- task: DynatraceIntegrationCreateEvents@0
-  displayName: 'Create Dynatrace Event'
-  inputs:
-    DynatraceService: 'dynatrace_connection'
-    apimethod: 'events'
-    jsonEventFile: '$(Build.SourcesDirectory)\dynatrace-event.json'
