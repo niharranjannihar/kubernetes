@@ -1,8 +1,3 @@
-# Starter pipeline
-# Start with a minimal pipeline that you can customize to build and deploy your code.
-# Add steps that build, run tests, deploy, and more:
-# https://aka.ms/yaml
-
 trigger:
 - master
 
@@ -10,14 +5,29 @@ pool:
   vmImage: 'windows-latest'
 
 steps:
-- script: echo Hello, world!
+
+- powershell: |
+    @'
+    {
+      "eventDetails": {
+        "eventType": "Deployment",
+        "title": "Build $(Build.BuildNumber)",
+        "description": "Deployment to production",
+        "source": "Azure DevOps",
+        "customProperties": {
+          "BuildId": "$(Build.BuildId)"
+        },
+        "entitySelector": "type(HOST)"
+      }
+    }
+    '@ | Out-File "$(Build.SourcesDirectory)\dynatrace-event.json" -Encoding utf8
+  displayName: 'Create Dynatrace Event JSON'
+
 - task: DynatraceIntegrationCreateEvents@0
   inputs:
     DynatraceService: 'dynatrace_connection'
     apimethod: 'events'
-    jsonEventFile: '{   "eventDetails": {     "eventType": "Deployment",     "title": "Release $(Release.ReleaseName)",     "description": "Deployment to production",     "source": "Azure DevOps",     "customProperties": {       "BuildId": "$(Build.BuildId)"     },     "entitySelector": "Target Dynatrace entity or selector expression"   } }'
+    jsonEventFile: '$(Build.SourcesDirectory)\dynatrace-event.json'
 
-- script: |
-    echo Add other tasks to build, test, and deploy your project.
-    echo See https://aka.ms/yaml
-  displayName: 'Run a multi-line script'
+- script: echo Event sent to Dynatrace
+  displayName: 'Verify'
