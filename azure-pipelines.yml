@@ -2,45 +2,38 @@ trigger:
 - master
 
 pool:
-  vmImage: 'windows-latest'
-
-variables:
-  system.debug: true
+  vmImage: windows-latest
 
 steps:
 
 - powershell: |
-    @'
-    {
-      "deploymentName": "Azure DevOps Deployment",
-      "deploymentVersion": "$(Build.BuildNumber)",
-      "eventType": "CUSTOM_DEPLOYMENT",
-      "title": "Deployment $(Build.BuildNumber)",
-      "source": "Azure DevOps",
-      "timeoutMinutes": 15,
-      "attachRules": {
-        "entityIds": [
-          "SERVICE-B295005FEE0D669E"
-        ]
-      },
-      "properties": {
-        "dt.event.description": "Deployment triggered from Azure DevOps",
-        "BuildId": "$(Build.BuildId)",
-        "PipelineName": "$(Build.DefinitionName)",
-        "BuildNumber": "$(Build.BuildNumber)"
-      }
+
+    $headers = @{
+      "Authorization" = "Api-Token $(DT_API_TOKEN)"
+      "Content-Type" = "application/json"
     }
-    '@ | Out-File "$(Build.SourcesDirectory)\dynatrace-event.json" -Encoding utf8
-  displayName: 'Create Dynatrace Event JSON'
 
-- powershell: |
-    Write-Host "===== Event JSON ====="
-    Get-Content "$(Build.SourcesDirectory)\dynatrace-event.json"
-  displayName: 'Display Event JSON'
+    $body = @{
+      eventType = "CUSTOM_DEPLOYMENT"
+      title = "Deployment $(Build.BuildNumber)"
+      source = "Azure DevOps"
+      deploymentName = "Azure DevOps Deployment"
+      deploymentVersion = "$(Build.BuildNumber)"
+      attachRules = @{
+        entityIds = @(
+          "SERVICE-B295005FEE0D669E"
+        )
+      }
+      properties = @{
+        "dt.event.description" = "Deployment triggered from Azure DevOps"
+        BuildId = "$(Build.BuildId)"
+      }
+    } | ConvertTo-Json -Depth 10
 
-- task: DynatraceIntegrationCreateEvents@0
-  displayName: 'Create Dynatrace Event'
-  inputs:
-    DynatraceService: 'dynatrace_connection'
-    apimethod: 'events'
-    jsonEventFile: '$(Build.SourcesDirectory)\dynatrace-event.json'
+    Invoke-RestMethod `
+      -Uri "https://nlq64817.live.dynatrace.com/api/v2/events/ingest" `
+      -Method POST `
+      -Headers $headers `
+      -Body $body
+
+  displayName: 'Send Deployment Event to Dynatrace'
