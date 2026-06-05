@@ -9,19 +9,12 @@ variables:
 
 steps:
 
-# Verify pipeline variables
-- powershell: |
-    Write-Host "Build ID: $(Build.BuildId)"
-    Write-Host "Build Number: $(Build.BuildNumber)"
-    Write-Host "Sources Directory: $(Build.SourcesDirectory)"
-  displayName: 'Verify Variables'
-
-# Create Dynatrace Event JSON
 - powershell: |
     @'
     {
       "eventType": "CUSTOM_DEPLOYMENT",
       "title": "Deployment $(Build.BuildNumber)",
+      "source": "Azure DevOps",
       "timeoutMinutes": 15,
       "attachRules": {
         "entityIds": [
@@ -38,20 +31,14 @@ steps:
     '@ | Out-File "$(Build.SourcesDirectory)\dynatrace-event.json" -Encoding utf8
   displayName: 'Create Dynatrace Event JSON'
 
-# Display JSON content for troubleshooting
 - powershell: |
+    Write-Host "===== Event JSON ====="
     Get-Content "$(Build.SourcesDirectory)\dynatrace-event.json"
   displayName: 'Display Event JSON'
 
-# Send Event to Dynatrace
 - task: DynatraceIntegrationCreateEvents@0
   displayName: 'Create Dynatrace Event'
   inputs:
     DynatraceService: 'dynatrace_connection'
     apimethod: 'events'
     jsonEventFile: '$(Build.SourcesDirectory)\dynatrace-event.json'
-
-# Confirmation
-- powershell: |
-    Write-Host "Dynatrace event submission completed."
-  displayName: 'Completion Message'
