@@ -1,0 +1,15 @@
+{
+  "deploymentName": "Azure DevOps Deployment",
+  "eventType": "CUSTOM_DEPLOYMENT",
+  "source": "Azure DevOps",
+  "title": "Deployment $(Build.BuildNumber)",
+  "attachRules": {
+    "entityIds": [
+      "SERVICE-B295005FEE0D669E"
+    ]
+  },
+  "properties": {
+    "dt.event.description": "Deployment triggered from Azure DevOps",
+    "BuildId": "$(Build.BuildId)"
+  }
+}
