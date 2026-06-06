@@ -1,0 +1,72 @@
+trigger:
+- master
+
+pool:
+  vmImage: windows-latest
+
+steps:
+
+- powershell: |
+
+    $headers = @{
+      "Authorization" = "Api-Token $(DT_API_TOKEN)"
+      "Content-Type"  = "application/json"
+    }
+
+    $body = @{
+      eventType = "CUSTOM_DEPLOYMENT"
+      title = "Deployment $(Build.DefinitionName) - $(Build.BuildNumber)"
+      source = "Azure DevOps"
+
+      deploymentName = "$(Build.DefinitionName)"
+      deploymentVersion = "$(Build.BuildNumber)"
+
+      properties = @{
+
+        # Deployment Details
+        "PipelineName"       = "$(Build.DefinitionName)"
+        "PipelineId"         = "$(System.DefinitionId)"
+        "BuildId"            = "$(Build.BuildId)"
+        "BuildNumber"        = "$(Build.BuildNumber)"
+        "BuildReason"        = "$(Build.Reason)"
+
+        # User Information
+        "TriggeredBy"        = "$(Build.RequestedFor)"
+        "TriggeredByEmail"   = "$(Build.RequestedForEmail)"
+
+        # Repository Information
+        "RepositoryName"     = "$(Build.Repository.Name)"
+        "RepositoryProvider" = "$(Build.Repository.Provider)"
+        "Branch"             = "$(Build.SourceBranch)"
+        "BranchName"         = "$(Build.SourceBranchName)"
+        "CommitId"           = "$(Build.SourceVersion)"
+
+        # Project Information
+        "ProjectName"        = "$(System.TeamProject)"
+        "CollectionUri"      = "$(System.CollectionUri)"
+
+        # Agent Information
+        "AgentName"          = "$(Agent.Name)"
+        "AgentMachineName"   = "$(Agent.MachineName)"
+        "AgentOS"            = "$(Agent.OS)"
+
+        # Release Information
+        "StageName"          = "$(System.StageName)"
+        "JobName"            = "$(System.JobName)"
+
+        # Dynatrace Description
+        "dt.event.description" = "Azure DevOps deployment completed successfully"
+
+      }
+
+    } | ConvertTo-Json -Depth 10
+
+    Write-Host "Sending deployment event to Dynatrace..."
+
+    Invoke-RestMethod `
+      -Uri "https://nlq64817.live.dynatrace.com/api/v2/events/ingest" `
+      -Method POST `
+      -Headers $headers `
+      -Body $body
+
+  displayName: 'Send Deployment Event to Dynatrace'
