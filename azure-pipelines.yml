@@ -64,7 +64,7 @@ steps:
     Write-Host "Sending deployment event to Dynatrace..."
 
     Invoke-RestMethod `
-      -Uri "https://<your-dynatrace-url>/api/v2/events/ingest" `
+      -Uri "https://nlq64817.live.dynatrace.com/api/v2/events/ingest" `
       -Method POST `
       -Headers $headers `
       -Body $body
