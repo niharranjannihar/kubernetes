@@ -19,11 +19,7 @@ steps:
       source = "Azure DevOps"
       deploymentName = "Azure DevOps Deployment"
       deploymentVersion = "$(Build.BuildNumber)"
-      attachRules = @{
-        # entityIds = @(
-        #   "SERVICE-B295005FEE0D669E"
-        # )
-      }
+      attachRules = @{      }
       properties = @{
         "dt.event.description" = "Deployment triggered from Azure DevOps"
         BuildId = "$(Build.BuildId)"
